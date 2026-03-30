@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Pac-Man</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>👾 AI Pac-Man</h1>
+<div id="score">Score: 0</div>
+
+<div id="game"></div>
+
+<script>
+const size = 10;
+let pacman = [0,0];
+let ghost = [9,9];
+let score = 0;
+
+function draw() {
+    const game = document.getElementById("game");
+    game.innerHTML = "";
+
+    for (let i=0;i<size;i++){
+        for (let j=0;j<size;j++){
+            let cell = document.createElement("div");
+            cell.classList.add("cell");
+
+            if (i === pacman[0] && j === pacman[1]) {
+                cell.classList.add("pacman");
+            }
+            if (i === ghost[0] && j === ghost[1]) {
+                cell.classList.add("ghost");
+            }
+
+            game.appendChild(cell);
+        }
+    }
+
+    document.getElementById("score").innerText = "Score: " + score;
+}
+
+document.addEventListener("keydown", e => {
+    let old = [...pacman];
+
+    if (e.key === "ArrowUp" && pacman[0] > 0) pacman[0]--;
+    if (e.key === "ArrowDown" && pacman[0] < size-1) pacman[0]++;
+    if (e.key === "ArrowLeft" && pacman[1] > 0) pacman[1]--;
+    if (e.key === "ArrowRight" && pacman[1] < size-1) pacman[1]++;
+
+    if (old[0] !== pacman[0] || old[1] !== pacman[1]) score++;
+
+    moveGhost();
+    draw();
+});
+
+function moveGhost() {
+    fetch('/move_ghost', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pacman, ghost})
+    })
+    .then(res => res.json())
+    .then(data => {
+        ghost = data.ghost;
+
+        if (ghost[0] === pacman[0] && ghost[1] === pacman[1]) {
+            alert("💀 Game Over! Score: " + score);
+            location.reload();
+        }
+
+        draw();
+    });
+}
+
+draw();
+</script>
+
+</body>
+</html>
