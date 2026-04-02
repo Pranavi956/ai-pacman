@@ -17,6 +17,16 @@ let pacman = [0,0];
 let ghost = [9,9];
 let score = 0;
 
+// 🟡 FOOD SYSTEM
+let food = [];
+for (let i=0;i<size;i++){
+    for (let j=0;j<size;j++){
+        if (!(i === 0 && j === 0)) {
+            food.push([i,j]);
+        }
+    }
+}
+
 function draw() {
     const game = document.getElementById("game");
     game.innerHTML = "";
@@ -26,9 +36,24 @@ function draw() {
             let cell = document.createElement("div");
             cell.classList.add("cell");
 
+            // 🍒 Food
+            for (let f of food){
+                if (f[0] === i && f[1] === j){
+                    let dot = document.createElement("div");
+                    dot.style.width = "8px";
+                    dot.style.height = "8px";
+                    dot.style.background = "white";
+                    dot.style.borderRadius = "50%";
+                    dot.style.margin = "auto";
+                    dot.style.marginTop = "20px";
+                    cell.appendChild(dot);
+                }
+            }
+
             if (i === pacman[0] && j === pacman[1]) {
                 cell.classList.add("pacman");
             }
+
             if (i === ghost[0] && j === ghost[1]) {
                 cell.classList.add("ghost");
             }
@@ -41,14 +66,21 @@ function draw() {
 }
 
 document.addEventListener("keydown", e => {
-    let old = [...pacman];
 
     if (e.key === "ArrowUp" && pacman[0] > 0) pacman[0]--;
     if (e.key === "ArrowDown" && pacman[0] < size-1) pacman[0]++;
     if (e.key === "ArrowLeft" && pacman[1] > 0) pacman[1]--;
     if (e.key === "ArrowRight" && pacman[1] < size-1) pacman[1]++;
 
-    if (old[0] !== pacman[0] || old[1] !== pacman[1]) score++;
+    // 🍒 Eat food
+    food = food.filter(f => !(f[0] === pacman[0] && f[1] === pacman[1]));
+    score++;
+
+    // 🎉 WIN CONDITION
+    if (food.length === 0){
+        alert("🏆 YOU WIN! Score: " + score);
+        location.reload();
+    }
 
     moveGhost();
     draw();
@@ -64,6 +96,7 @@ function moveGhost() {
     .then(data => {
         ghost = data.ghost;
 
+        // 💀 GAME OVER
         if (ghost[0] === pacman[0] && ghost[1] === pacman[1]) {
             alert("💀 Game Over! Score: " + score);
             location.reload();
